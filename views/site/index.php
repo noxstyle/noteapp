@@ -2,11 +2,7 @@
 /**
  * @var yii\base\View $this
  */
-$this->title = 'My Yii Application';
-
-//$koInitJS = <<<KOINIT
-//KOINIT;
-//$this->registerJs($koInitJS)
+$this->title = 'NoteApp';
 ?>
 
 <div class="row">
