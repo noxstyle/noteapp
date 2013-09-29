@@ -25,7 +25,7 @@ app\js\NoteAppAsset::register($this);
 <body id="body">
 <?php $this->beginBody(); ?>
 
-	<a href="https://github.com/noxstyle/noteapp" class="github visible-lg visible-md"><img src="https://s3.amazonaws.com/github/ribbons/forkme_left_darkblue_121621.png" alt="Fork me on GitHub"></a>
+	<a href="https://github.com/noxstyle/noteapp" class="github visible-lg visible-md" target="_blank"><img src="https://s3.amazonaws.com/github/ribbons/forkme_left_darkblue_121621.png" alt="Fork me on GitHub"></a>
 
 	<header id="header">
 		<h1><span class="title-em">N</span>ote<span class="title-em">A</span>pp</h1>
