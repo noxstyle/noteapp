@@ -276,7 +276,6 @@
                 url: '?r=note/delete-note',
                 success:function(d){
                     if (d.deleted) {
-                        self.filteredNotes.remove(note);
                         self.notes.remove(note);
                         self.showStatus('Note deleted...');
                     } else
