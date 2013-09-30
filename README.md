@@ -12,14 +12,13 @@ Installation
 
 You will need _[Composer](http://getcomposer.org/)_ for easy installation.
 
-Clone the repo:
-    git clone https://github.com/noxstyle/noteapp.git
+1. Clone the repo:
 
-Install dependencies via composer:
-    composer install
+2. Install dependencies via composer:
+        composer install
 
-Change permissions to yii folders (i.e. assets & runtime)
-    chmod -R 777 web/assets runtime/
+3. Change permissions of yii writeable folders (i.e. assets & runtime)
+        mkdir web/assets && chmod -R 777 web/assets runtime/
 
 Other Info
 -------------------
