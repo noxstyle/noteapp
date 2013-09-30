@@ -5,7 +5,8 @@
     /* config
      * ======================= */
     $.config = {
-        slideDuration: 250
+        slideDuration: 250,
+        untaggedName: 'Untagged' // The name for 'Untagged' entries
     };  
 
     /* Bindings
@@ -104,8 +105,8 @@
         }));
 
         // Add empty tag
-        self.tags.splice(0,0, new Tag({id:0, name:'Untagged'}));
-        
+        self.tags.splice(0,0, new Tag({id:0, name:$.config.untaggedName}));
+
         // Filtered notes - i.e. active notes
         self.filteredNotes = ko.computed(function(){
             return ko.utils.arrayFilter(self.notes(), function(note){
@@ -201,16 +202,18 @@
         // Updates tags if new tags found from "tags" array
         self.updateTags = function(tags) {
             ko.utils.arrayForEach(tags, function(newTag) {
-                var isPresent = ko.utils.arrayFirst(self.tags(), function(tag) {
-                    return tag.name == newTag;
-                });
+                if (newTag != "") {
 
-                if (!isPresent) {
-                    var newObj = new Tag({id: 0, name: newTag});
-                    self.tags().push(newObj);
+                    var isPresent = ko.utils.arrayFirst(self.tags(), function(tag) {
+                        return tag.name == newTag;
+                    });
+
+                    if (!isPresent) {
+                        var newObj = new Tag({id: 0, name: newTag});
+                        self.tags.push(newObj);
+                    }
                 }
             });
-
         };
 
         self.getNotesByTag = function(tag) {
@@ -225,21 +228,13 @@
                         return curTags.indexOf(filter) !== -1;
                     } else {
                         // If accessing untagged.. return all empty values
-                        if (filter === 'untagged')
+                        if (filter === $.config.untaggedName.toLowerCase())
                             return true;
                     }
                 });
             }
             return [];
         };
-
-        // Displayed tags... We shall add "untagged" entry to the tag list
-        // in order to display those entries somewhere
-        self.getDisplayTags = ko.computed(function() {
-            var tags = self.tags();
-            var emptyTag = new Tag({id: 0, name: 'Untagged'});
-            return tags.splice(0,0,emptyTag);
-        });
 
         self.closeNote = function(note, e) {
             note.active(false);
@@ -326,7 +321,7 @@
 
             // Remove the "Untagged" entry from tag list while saving to localStorage
             var saveableTags = ko.utils.arrayMap(self.tags(), function(tag) {
-                if (tag.name != 'Untagged')
+                if (tag.name != $.config.untaggedName)
                     return new Tag(tag);
             });
             saveableTags = saveableTags.filter(function(n){return n;});
