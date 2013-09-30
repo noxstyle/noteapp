@@ -78,7 +78,6 @@
 
         // Subscribe for "tags" change in order to process the data
         self.tags.subscribe(function(){
-            console.log('changed tag value %s', self.tags);
             vm.updateTags(self.tags().split(","));
         });
 
@@ -236,7 +235,6 @@
 
         self.closeNote = function(note, e) {
             note.active(false);
-            console.log('note active: %s', note.active());
         };
 
         self.openNote = function(note, e) {
