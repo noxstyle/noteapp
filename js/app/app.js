@@ -2,7 +2,7 @@
 (function ($) {
     "use strict";
 
-    /* config
+    /* Config
      * ======================= */
     $.config = {
         slideDuration: 250
@@ -104,17 +104,18 @@
         self.tags = ko.observableArray(ko.utils.arrayMap(tags, function(tag) {
             return new Tag(tag);
         }));
-        
-        /*self.filteredNotes = ko.observableArray(ko.utils.arrayFilter(self.notes(), function(note){
-            return note.active();
-        }));*/
 
+        // Add empty tag
+        self.tags.splice(0,0, new Tag({id:0, name:'Untagged'}));
+        
+        // Filtered notes - i.e. active notes
         self.filteredNotes = ko.computed(function(){
             return ko.utils.arrayFilter(self.notes(), function(note){
                 return note.active();
             });
         });
 
+        // Helper method to pass tags as array to select2
         self.getTagListAsArray = function() {
             var tags = [];
             $.each(ko.toJS(self.tags), function(i,v){
@@ -147,7 +148,7 @@
             }
         };
 
-        // 
+        // Toggles tag list display
         self.showNotesForTag = function(tag, event) {
             var clickedTag = $(event.target).get(0).tagName;
             if (clickedTag === 'A') {
@@ -207,14 +208,10 @@
                 });
 
                 if (!isPresent) {
-                    console.log('adding tag: %s', newTag);
                     var newObj = new Tag({id: 0, name: newTag});
-                    console.log(newObj);
                     self.tags().push(newObj);
                 }
             });
-
-            console.log(self.tags());
         };
 
         self.getNotesByTag = function(tag) {
@@ -236,14 +233,6 @@
             }
             return [];
         };
-
-        // Displayed tags... We shall add "untagged" entry to the tag list
-        // in order to display those entries somewhere
-        self.getDisplayTags = ko.computed(function() {
-            var tags = self.tags();
-            var emptyTag = new Tag({id: 0, name: 'Untagged'});
-            return tags.splice(0,0,emptyTag);
-        });
 
         self.closeNote = function(note, e) {
             note.active(false);
@@ -268,51 +257,10 @@
             self.showStatus('New note created...');
         };
 
+        // Deletes note - Emitted ajax call from demo
         self.deleteNote = function(note) {
-            $.ajax({
-                type: 'POST',
-                dataType:'json',
-                data: {note: ko.toJSON({id: note.id})},
-                url: '?r=note/delete-note',
-                success:function(d){
-                    if (d.deleted) {
-                        self.filteredNotes.remove(note);
-                        self.notes.remove(note);
-                        self.showStatus('Note deleted...');
-                    } else
-                        self.showStatus('ERROR! Unable to delete note!', 1);
-                },
-                error: function(e) {
-                    self.showStatus('ERROR! Unable to delete note!', 1);
-                }
-            });
-        };
-
-        self.saveNote = function() {
-            var notes = ko.toJSON(self.notes);
-            $.ajax({
-                type: 'POST',
-                dataType:'json',
-                data: {notes: notes, tags: ko.toJSON(self.tags)},
-                url: '?r=note/save-notes',
-                success:function(d){
-                    var mappedNotes = $.map(d.notes, function(item) {
-                        return new Note(item, self);
-                    });
-
-                    var mappedTags = $.map(d.tags, function(item){
-                        return new Tag(item);
-                    });
-
-                    self.notes(mappedNotes);
-                    self.tags(mappedTags);
-
-                    self.showStatus('Persistent storage updated...');
-                },
-                error: function(d) {
-                    self.showStatus('ERROR while updating persistent storage!', 1);
-                }
-            });
+            self.notes.remove(note);
+            self.showStatus('Note deleted...');
         };
 
         self.initSelect2 = function() {
@@ -325,51 +273,73 @@
         /* Subscriptions
          * ================== */
 
-        /*Note.tags.subscribe(function(){
-            console.log('%c Tags changed! ', 'background: #ccc; color: #000');
+        // Save a localStorage copy of notes on change
+        ko.computed(function () {
+            // Save notes
+            localStorage.setItem('na-demo-notes', ko.toJSON(self.notes));
 
-        });*/
-        /*self.notes.subscribe(function(){
-            console.log('%c Notes changed! ', 'background: #ccc; color: #000');
+            // Remove the "Untagged" entry from tag list while saving to localStorage
+            var saveableTags = ko.utils.arrayMap(self.tags(), function(tag) {
+                if (tag.name != 'Untagged')
+                    return new Tag(tag);
+            });
+            saveableTags = saveableTags.filter(function(n){return n;});
 
-        });
-
-        self.tags.subscribe(function(){
-            console.log('%c Tags changed! ', 'background: #ccc; color: #000');
-
-        });*/
-
-        // internal computed observable that fires whenever anything changes in our todos
-        /*ko.computed(function () {
-            // store a clean copy to local storage, which also creates a dependency on the observableArray and all observables in each item
-            localStorage.setItem('ko-notes', ko.toJSON(self.notes));
-            localStorage.setItem('ko-tags', ko.toJSON(self.tags));
-            console.log('%c Oh my heavens! ', 'background: #222; color: #bada55');
+            // Set the Tags storage item
+            localStorage.setItem('na-demo-tags', ko.toJSON(saveableTags));
         }).extend({
             throttle: 500
-        }); // save at most twice per second*/
+        }); // save at most twice per second
 
     };
 
     // Load data stored in local storage
-    // var tags    = ko.utils.parseJson(localStorage.getItem('ko-tags'));
-    // var notes   = ko.utils.parseJson(localStorage.getItem('ko-notes'));
+    var tags    = ko.utils.parseJson(localStorage.getItem('na-demo-tags'));
+    var notes   = ko.utils.parseJson(localStorage.getItem('na-demo-notes'));
 
-    // Temporarily disable hmtl5 local storage
-    var tags    = null,
-        notes   = null;
-
-    // Load persistent data if local storage not found
+    // Use Demo data if local data not found
     if (!tags || !notes) {
-        $.ajax({
-            dataType:'json',
-            url: "?r=note/get-notes",
-            async:false,
-            success:function(d) {            
-                tags = d.tags;
-                notes = d.notes;
+        tags = [
+            {
+                id: 1,
+                name: "Note"
+            },
+            {
+                id: 2,
+                name: "App"
+            },
+            {
+                id: 3,
+                name: "Demo"
             }
-        });
+        ];
+
+        notes = [
+            {
+                active: true,
+                content: "Welcome to the NoteApp!",
+                title: "DemoApp",
+                insertTime: null,
+                updateTime: null,
+                tags: "Note, App, Demo"
+            },
+            {
+                active: false,
+                content: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
+                title: "Demo Note #2",
+                insertTime: null,
+                updateTime: null,
+                tags: "Demo"
+            },
+            {
+                active: false,
+                content: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
+                title: "Demo Note #3",
+                insertTime: null,
+                updateTime: null,
+                tags: "App"
+            },
+        ];
     };
 
     var vm = new ViewModel(notes || [], tags || []);

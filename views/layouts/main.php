@@ -11,7 +11,6 @@ use app\js;
  * @var $content string
  */
 app\config\AppAsset::register($this);
-#app\js\KnockoutAsset::register($this);
 app\js\NoteAppAsset::register($this);
 ?>
 <?php $this->beginPage(); ?>
@@ -25,7 +24,7 @@ app\js\NoteAppAsset::register($this);
 <body id="body">
 <?php $this->beginBody(); ?>
 
-	<a href="https://github.com/you" class="github visible-lg visible-md"><img src="https://s3.amazonaws.com/github/ribbons/forkme_left_darkblue_121621.png" alt="Fork me on GitHub"></a>
+	<a href="https://github.com/noxstyle/noteapp" class="github visible-lg visible-md" target="_blank"><img src="https://s3.amazonaws.com/github/ribbons/forkme_left_darkblue_121621.png" alt="Fork me on GitHub"></a>
 
 	<header id="header">
 		<h1><span class="title-em">N</span>ote<span class="title-em">A</span>pp</h1>
@@ -33,7 +32,6 @@ app\js\NoteAppAsset::register($this);
 
 		<div class="app-actions pull-right">
 			<button id="new-note" class="btn btn-primary" data-bind="click: addNote">New Note</button>
-			<button id="save-notes" class="btn btn-primary" data-bind="click: saveNote">Save Notes</button>
 		</div><!-- /.app-actions -->
 
 	</header><!-- /#header -->
