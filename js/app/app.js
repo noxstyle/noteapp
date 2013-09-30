@@ -16,7 +16,6 @@
         init: function(element, valueAccessor, allBindingsAccessor) {
             $(element).select2({
                 tags: ko.toJS(valueAccessor()),
-                //valueAccessor(),
                 tokenSeparators: [","]
             });
 
@@ -78,7 +77,6 @@
 
         // Subscribe for "tags" change in order to process the data
         self.tags.subscribe(function(){
-            console.log('changed tag value %s', self.tags);
             vm.updateTags(self.tags().split(","));
         });
 
@@ -104,17 +102,18 @@
         self.tags = ko.observableArray(ko.utils.arrayMap(tags, function(tag) {
             return new Tag(tag);
         }));
-        
-        /*self.filteredNotes = ko.observableArray(ko.utils.arrayFilter(self.notes(), function(note){
-            return note.active();
-        }));*/
 
+        // Add empty tag
+        self.tags.splice(0,0, new Tag({id:0, name:'Untagged'}));
+        
+        // Filtered notes - i.e. active notes
         self.filteredNotes = ko.computed(function(){
             return ko.utils.arrayFilter(self.notes(), function(note){
                 return note.active();
             });
         });
 
+        // Helper method to pass tags as array to select2
         self.getTagListAsArray = function() {
             var tags = [];
             $.each(ko.toJS(self.tags), function(i,v){
@@ -147,7 +146,7 @@
             }
         };
 
-        // 
+        // Toggles tag list display
         self.showNotesForTag = function(tag, event) {
             var clickedTag = $(event.target).get(0).tagName;
             if (clickedTag === 'A') {
@@ -207,14 +206,11 @@
                 });
 
                 if (!isPresent) {
-                    console.log('adding tag: %s', newTag);
                     var newObj = new Tag({id: 0, name: newTag});
-                    console.log(newObj);
                     self.tags().push(newObj);
                 }
             });
 
-            console.log(self.tags());
         };
 
         self.getNotesByTag = function(tag) {
@@ -247,7 +243,6 @@
 
         self.closeNote = function(note, e) {
             note.active(false);
-            console.log('note active: %s', note.active());
         };
 
         self.openNote = function(note, e) {
@@ -324,39 +319,29 @@
         /* Subscriptions
          * ================== */
 
-        /*Note.tags.subscribe(function(){
-            console.log('%c Tags changed! ', 'background: #ccc; color: #000');
+        // Save a localStorage copy of notes on change
+        ko.computed(function () {
+            // Save notes
+            localStorage.setItem('na-demo-notes', ko.toJSON(self.notes));
 
-        });*/
-        /*self.notes.subscribe(function(){
-            console.log('%c Notes changed! ', 'background: #ccc; color: #000');
+            // Remove the "Untagged" entry from tag list while saving to localStorage
+            var saveableTags = ko.utils.arrayMap(self.tags(), function(tag) {
+                if (tag.name != 'Untagged')
+                    return new Tag(tag);
+            });
+            saveableTags = saveableTags.filter(function(n){return n;});
 
-        });
-
-        self.tags.subscribe(function(){
-            console.log('%c Tags changed! ', 'background: #ccc; color: #000');
-
-        });*/
-
-        // internal computed observable that fires whenever anything changes in our todos
-        /*ko.computed(function () {
-            // store a clean copy to local storage, which also creates a dependency on the observableArray and all observables in each item
-            localStorage.setItem('ko-notes', ko.toJSON(self.notes));
-            localStorage.setItem('ko-tags', ko.toJSON(self.tags));
-            console.log('%c Oh my heavens! ', 'background: #222; color: #bada55');
+            // Set the Tags storage item
+            localStorage.setItem('na-demo-tags', ko.toJSON(saveableTags));
         }).extend({
             throttle: 500
-        }); // save at most twice per second*/
+        }); // save at most twice per second
 
     };
 
     // Load data stored in local storage
-    // var tags    = ko.utils.parseJson(localStorage.getItem('ko-tags'));
-    // var notes   = ko.utils.parseJson(localStorage.getItem('ko-notes'));
-
-    // Temporarily disable hmtl5 local storage
-    var tags    = null,
-        notes   = null;
+    var tags    = ko.utils.parseJson(localStorage.getItem('ko-tags'));
+    var notes   = ko.utils.parseJson(localStorage.getItem('ko-notes'));
 
     // Load persistent data if local storage not found
     if (!tags || !notes) {
